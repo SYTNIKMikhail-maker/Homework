@@ -52,10 +52,10 @@ WHERE year = '2023-01-01';
 
 --5task
 WITH total AS (
-    SELECT DATE_TRUNC('day', dh.orderdate) AS date, MAX(od.unitprice*od.orderqty*(1-unitpricediscount)) AS total_price
+    SELECT DATE_TRUNC('day', dh.orderdate) AS date, MAX(od.unitprice*od.orderqty*(1-od.unitpricediscount)) AS total_price
     FROM sales.salesorderdetail od
     JOIN sales.salesorderheader dh ON od.salesorderid=dh.salesorderid
-    GROUP BY DATE_TRUNC('day', dh.orderdate)
+    GROUP BY date
 ),
 running_calc AS (
     SELECT date, total_price,
