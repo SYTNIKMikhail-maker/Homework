@@ -69,21 +69,23 @@ WHERE indexname = 'idx_modified_date';
 
 CREATE INDEX idx_for_email 
 ON customer (email) 
-WHERE active = TRUE;
+WHERE email like '%mail';
 
 EXPLAIN ANALYZE 
 SELECT email 
 FROM customer 
-WHERE active = TRUE;
+WHERE email like '%mail';
 
 CREATE INDEX expres_index 
 ON customer((
     LOWER(LEFT(first_name, 1)) || ',' || last_name
 ));
 
+EXPLAIN ANALYZE
 SELECT * 
 FROM customer 
 WHERE LOWER(LEFT(first_name, 1)) || ',' || last_name = 'f,lastname1';
+
 
 
 
