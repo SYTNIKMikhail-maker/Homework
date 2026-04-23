@@ -1,18 +1,17 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 
 
 class Person(ABC):
-    def __init__(self, id, name, phone, email, salary, hire_date):
-        self._id = id
+    def __init__(self, person_id, name, phone, email, salary, hire_date):
+        self._id = person_id
         self.name = name
         self.__phone = phone
         self.__email = email
         self.__salary = salary
-        self.hire_date = hire_date
+        self.__hire_date = hire_date
 
-    @abstractmethod
-    def work(self):
-        pass
+    def get_info(self):
+        return f"{self.name}"
 
     def login(self):
         print(f"{self.name} logged in")
@@ -21,270 +20,170 @@ class Person(ABC):
         print(f"{self.name} logged out")
 
     @property
-    def salary(self):
+    def get_Salary(self):
         return self.__salary
-
-    @salary.setter
-    def salary(self, value):
-        if value > 0:
-            self.__salary = value
-
-    @property
-    def phone(self):
-        return self.__phone
-
-    @phone.setter
-    def phone(self, value):
-        self.__phone = value
-
-    @property
-    def email(self):
-        return self.__email
-
-    @email.setter
-    def email(self, value):
-        self.__email = value
-
-    def __str__(self):
-        return self.name
-
-    def __eq__(self, other):
-        return self._id == other._id
 
 
 class Waiter(Person):
-    def __init__(self, id, name, phone, email, salary, hire_date, table_number, experience_years):
-        super().__init__(id, name, phone, email, salary, hire_date)
+    def __init__(self, person_id, name, phone, email, salary, hire_date,
+                 table_number, tips, experience_years):
+        super().__init__(person_id, name, phone, email, salary, hire_date)
         self.table_number = table_number
-        self.__tips = 0.0
+        self.tips = tips
         self.experience_years = experience_years
 
-    def work(self):
-        print(f"{self} is serving tables")
+    def take_Order(self):
+        print(f"{self.name} takes the order")
 
-    def take_order(self, order):
-        print(f"{self} took the order")
+    def serve_Food(self):
+        print(f"{self.name} serves the food")
 
-    def serve_food(self):
-        print(f"{self} is serving food")
-
-    def request_bill(self):
-        print(f"{self} brought the bill")
-
-    @property
-    def tips(self):
-        return self.__tips
-
-    def add_tip(self, amount):
-        self.__tips += amount
+    def request_Bill(self):
+        print(f"{self.name} brings the bill")
 
 
 class Chef(Person):
-    def __init__(self, id, name, phone, email, salary, hire_date, specialty, years_experience):
-        super().__init__(id, name, phone, email, salary, hire_date)
+    def __init__(self, person_id, name, phone, email, salary, hire_date,
+                 specialty, certifications, years_experience):
+        super().__init__(person_id, name, phone, email, salary, hire_date)
         self.specialty = specialty
+        self.certifications = certifications
         self.years_experience = years_experience
 
-    def work(self):
-        print(f"{self} is cooking {self.specialty}")
-
-    def cook_dish(self, dish_name):
-        print(f"{self} is cooking: {dish_name}")
+    def cook_Dish(self):
+        print(f"{self.name} cooks a dish")
 
 
 class DeliveryPerson(Person):
-    def __init__(self, id, name, phone, email, salary, hire_date, vehicle_type):
-        super().__init__(id, name, phone, email, salary, hire_date)
+    def __init__(self, person_id, name, phone, email, salary, hire_date,
+                 vehicle_type, current_location):
+        super().__init__(person_id, name, phone, email, salary, hire_date)
         self.vehicle_type = vehicle_type
-        self.__current_location = None
+        self.current_location = current_location
 
-    def work(self):
-        print(f"{self} is delivering orders on {self.vehicle_type}")
-
-    def deliver_order(self, delivery):
-        print(f"{self} is delivering to: {delivery.address}")
-
-    @property
-    def current_location(self):
-        return self.__current_location
-
-    @current_location.setter
-    def current_location(self, location):
-        self.__current_location = location
-
-
-class Customer:
-    def __init__(self, name, phone, address):
-        self.name = name
-        self.__phone = phone
-        self.address = address
-
-    def make_payment(self, payment):
-        print(f"{self.name} is paying: {payment.amount}")
-
-    def track_delivery(self, delivery):
-        print(f"{self.name} is tracking delivery. Status: {delivery.status}")
-
-    @property
-    def phone(self):
-        return self.__phone
-
-    @phone.setter
-    def phone(self, value):
-        self.__phone = value
-
-    def __str__(self):
-        return self.name
+    def deliver_Order(self):
+        print(f"{self.name} delivers the order")
 
 
 class MenuItem:
-    def __init__(self, name, price, is_available = True):
+    def __init__(self, name, price, is_available):
         self.name = name
-        self.__price = price
+        self.price = price
         self.is_available = is_available
 
-    @property
-    def price(self):
-        return self.__price
-
-    @price.setter
-    def price(self, value):
-        if value > 0:
-            self.__price = value
-
-    def __str__(self):
-        return self.name
+    def get_Price(self):
+        return self.price
 
 
 class Menu:
-    total_menus = 0
-
-    def __init__(self, name):
+    def __init__(self, name, items):
         self.name = name
-        self.__items = []
-        Menu.total_menus += 1
+        self.items = items
 
-    @property
-    def items(self):
-        return self.__items
-
-    def add_item(self, item):
-        self.__items.append(item)
-
-    def remove_item(self, item):
-        self.__items.remove(item)
-
-    @staticmethod
-    def get_total_menus():
-        return Menu.total_menus
+    def get_items(self):
+        return self.items
 
 
-class Order:
-    order_count = 0
+class Customer:
+    def __init__(self, name, phone):
+        self.name = name
+        self.__phone = phone
+        self.orders = []
 
-    def __init__(self, is_delivery = False):
-        Order.order_count += 1
-        self.__order_id = Order.order_count
-        self.__status = "pending"
-        self.__total_price = 0.0
-        self.is_delivery = is_delivery
-        self.__items = []
+    def make_Payment(self):
+        print(f"{self.name} makes payment")
 
-    @property
-    def order_id(self):
-        return self.__order_id
-
-    @property
-    def status(self):
-        return self.__status
-
-    @status.setter
-    def status(self, value):
-        self.__status = value
-
-    @property
-    def total_price(self):
-        return self.__total_price
-
-    def add_item(self, item):
-        self.__items.append(item)
-        self.__total_price += item.price
-        print(f"Added: {item} ({item.price})")
-
-    def remove_item(self, item):
-        self.__items.remove(item)
-        self.__total_price -= item.price
-
-    def __len__(self):
-        return len(self.__items)
-
-    def __lt__(self, other):
-        return self.__total_price < other.__total_price
+    def track_Delivery(self):
+        print(f"{self.name} tracks delivery")
 
 
 class Payment:
-    def __init__(self, amount):
+    def __init__(self, amount, status):
         self.__amount = amount
-        self.__status = "unpaid"
+        self.status = status
 
-    @property
-    def amount(self):
-        return self.__amount
+    def process_Payment(self):
+        print(f"Processing payment of {self.__amount}")
 
-    @property
-    def status(self):
-        return self.__status
-
-    def process_payment(self):
-        self.__status = "paid"
-        print(f"Payment of {self.__amount} was successful")
-
-    def __str__(self):
-        return f"Payment: {self.__amount} - {self.__status}"
+    def get_Status(self):
+        return self.status
 
 
 class Delivery:
-    def __init__(self, address):
+    def __init__(self, address, status):
         self.address = address
-        self.__status = "preparing"
+        self.status = status
 
-    @property
-    def status(self):
-        return self.__status
+    def get_Status(self):
+        return self.status
 
-    @status.setter
-    def status(self, new_status):
-        self.__status = new_status
-        print(f"Delivery status updated: {new_status}")
-
-    def __str__(self):
-        return f"Delivery to {self.address} - {self.__status}"
+    def update_Status(self, new_status):
+        self.status = new_status
+        print(f"Delivery status updated: {self.status}")
 
 
+class Order:
+    def __init__(self, status, total_price, is_delivery,
+                 customer, payment, delivery, menu):
+        self.status = status
+        self.total_price = total_price
+        self.is_delivery = is_delivery
 
-waiter1 = Waiter(1, "John", "123", "john@email.com", 2000, "2023-01-01", 5, 3)
-chef1 = Chef(2, "Mike", "456", "mike@email.com", 3000, "2023-01-01", "Italian", 5)
-customer1 = Customer("Alice", "789", "Main St 10")
+        self.customer = customer
+        self.payment = payment
+        self.delivery = delivery
+        self.menu = menu
 
-menu = Menu("Main Menu")
-item1 = MenuItem("Pizza", 15.99)
-item2 = MenuItem("Pasta", 12.99)
-menu.add_item(item1)
-menu.add_item(item2)
+        self.items = []
 
-order1 = Order(is_delivery=True)
-order1.add_item(item1)
-order1.add_item(item2)
+        customer.orders.append(self)
 
-print(f"Order total: {order1.total_price}")
-print(f"Order ID: {order1.order_id}")
-print(f"Order status: {order1.status}")
-order1.status = "completed"
-print(f"New status: {order1.status}")
-print(f"Total menus created: {Menu.get_total_menus()}")
-print(f"Waiter salary: {waiter1.salary}")
-waiter1.salary = 2500
-print(f"New salary: {waiter1.salary}")
-print(f"Item price: {item1.price}")
-item1.price = 18.99
-print(f"New price: {item1.price}")
+    def add_Item(self, item):
+        self.items.append(item)
+        print(f"Added: {item.name}")
+
+    def remove_Item(self, item):
+        self.items.remove(item)
+        print(f"Removed: {item.name}")
+
+
+burger = MenuItem("Burger", 9.99, True)
+pizza = MenuItem("Pizza", 12.50, True)
+soda = MenuItem("Soda", 2.00, True)
+menu = Menu("Main Menu", [burger, pizza, soda])
+
+waiter = Waiter(1, "Alice", "111", "a@a.com", 2000, "2022-01-01", 3, 50.0, 2)
+chef = Chef(2, "Bob", "222", "b@b.com", 3000, "2020-05-01", "Italian", "Pro", 5)
+delivery_person = DeliveryPerson(3, "Carl", "333", "c@c.com", 1800, "2023-03-01",
+                                 "Bicycle", "Downtown")
+
+customer = Customer("John", "555-1234")
+
+payment = Payment(22.49, "pending")
+delivery = Delivery("5th Avenue 10", "on the way")
+
+order = Order(
+    status="new",
+    total_price=22.49,
+    is_delivery=True,
+    customer=customer,
+    payment=payment,
+    delivery=delivery,
+    menu=menu
+)
+
+order.add_Item(burger)
+order.add_Item(pizza)
+
+waiter.take_Order()
+chef.cook_Dish()
+delivery_person.deliver_Order()
+
+payment.process_Payment()
+delivery.update_Status("delivered")
+
+print(f"{customer.name} has {len(customer.orders)} orders")
+print(f"Menu items: {[item.name for item in menu.get_items()]}")
+print(f"Order items: {[item.name for item in order.items]}")
+print(f"Waiter info: {waiter.get_info()}")
+print(f"Chef salary: {chef.get_Salary}")
