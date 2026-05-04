@@ -20,7 +20,7 @@ class Person(ABC):
         print(f"{self.name} logged out")
 
     @property
-    def salary(self):
+    def get_salary(self):
         return self.__salary
 
 
@@ -186,4 +186,4 @@ print(f"{customer.name} has {len(customer.orders)} orders")
 print(f"Menu items: {[item.name for item in menu.get_items()]}")
 print(f"Order items: {[item.name for item in order.items]}")
 print(f"Waiter info: {waiter.get_info()}")
-print(f"Chef salary: {chef.salary}")
+print(f"Chef salary: {chef.get_salary}")
