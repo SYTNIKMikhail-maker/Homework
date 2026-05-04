@@ -20,7 +20,7 @@ class Person(ABC):
         print(f"{self.name} logged out")
 
     @property
-    def get_Salary(self):
+    def salary(self):
         return self.__salary
 
 
@@ -32,13 +32,13 @@ class Waiter(Person):
         self.tips = tips
         self.experience_years = experience_years
 
-    def take_Order(self):
+    def take_order(self):
         print(f"{self.name} takes the order")
 
-    def serve_Food(self):
+    def serve_food(self):
         print(f"{self.name} serves the food")
 
-    def request_Bill(self):
+    def request_bill(self):
         print(f"{self.name} brings the bill")
 
 
@@ -50,7 +50,7 @@ class Chef(Person):
         self.certifications = certifications
         self.years_experience = years_experience
 
-    def cook_Dish(self):
+    def cook_dish(self):
         print(f"{self.name} cooks a dish")
 
 
@@ -61,7 +61,7 @@ class DeliveryPerson(Person):
         self.vehicle_type = vehicle_type
         self.current_location = current_location
 
-    def deliver_Order(self):
+    def deliver_order(self):
         print(f"{self.name} delivers the order")
 
 
@@ -71,7 +71,7 @@ class MenuItem:
         self.price = price
         self.is_available = is_available
 
-    def get_Price(self):
+    def get_price(self):
         return self.price
 
 
@@ -90,10 +90,10 @@ class Customer:
         self.__phone = phone
         self.orders = []
 
-    def make_Payment(self):
+    def make_payment(self):
         print(f"{self.name} makes payment")
 
-    def track_Delivery(self):
+    def track_delivery(self):
         print(f"{self.name} tracks delivery")
 
 
@@ -102,10 +102,10 @@ class Payment:
         self.__amount = amount
         self.status = status
 
-    def process_Payment(self):
+    def process_payment(self):
         print(f"Processing payment of {self.__amount}")
 
-    def get_Status(self):
+    def get_status(self):
         return self.status
 
 
@@ -114,10 +114,10 @@ class Delivery:
         self.address = address
         self.status = status
 
-    def get_Status(self):
+    def get_status(self):
         return self.status
 
-    def update_Status(self, new_status):
+    def update_status(self, new_status):
         self.status = new_status
         print(f"Delivery status updated: {self.status}")
 
@@ -138,11 +138,11 @@ class Order:
 
         customer.orders.append(self)
 
-    def add_Item(self, item):
+    def add_item(self, item):
         self.items.append(item)
         print(f"Added: {item.name}")
 
-    def remove_Item(self, item):
+    def remove_item(self, item):
         self.items.remove(item)
         print(f"Removed: {item.name}")
 
@@ -172,18 +172,18 @@ order = Order(
     menu=menu
 )
 
-order.add_Item(burger)
-order.add_Item(pizza)
+order.add_item(burger)
+order.add_item(pizza)
 
-waiter.take_Order()
-chef.cook_Dish()
-delivery_person.deliver_Order()
+waiter.take_order()
+chef.cook_dish()
+delivery_person.deliver_order()
 
-payment.process_Payment()
-delivery.update_Status("delivered")
+payment.process_payment()
+delivery.update_status("delivered")
 
 print(f"{customer.name} has {len(customer.orders)} orders")
 print(f"Menu items: {[item.name for item in menu.get_items()]}")
 print(f"Order items: {[item.name for item in order.items]}")
 print(f"Waiter info: {waiter.get_info()}")
-print(f"Chef salary: {chef.get_Salary}")
+print(f"Chef salary: {chef.get_salary}")
