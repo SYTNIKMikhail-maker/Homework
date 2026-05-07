@@ -1,20 +1,28 @@
+# Data Structures implementation without using built-in collections.
+# Includes: LinkedList, Queue, Stack, BinarySearchTree, HashTable, Graph.
+
+
+# A single node that stores a value and a reference to the next node
 class Node:
     def __init__(self, value):
         self.value = value
         self.next = None
 
 
+# A linear data structure where each element points to the next one
 class LinkedList:
     def __init__(self):
         self.head = None
         self.length = 0
 
+    # Add a new element to the beginning of the list
     def prepend(self, value):
         new_node = Node(value)
         new_node.next = self.head
         self.head = new_node
         self.length += 1
 
+    # Add a new element to the end of the list
     def append(self, value):
         new_node = Node(value)
         if self.head is None:
@@ -27,6 +35,7 @@ class LinkedList:
         current.next = new_node
         self.length += 1
 
+    # Return the index of the first element with the given value, or -1 if not found
     def lookup(self, value):
         current = self.head
         index = 0
@@ -37,6 +46,7 @@ class LinkedList:
             index += 1
         return -1
 
+    # Insert a new element at the given index, shifting elements to the right
     def insert(self, index, value):
         if index < 0 or index > self.length:
             raise IndexError("Index out of range")
@@ -51,6 +61,7 @@ class LinkedList:
         current.next = new_node
         self.length += 1
 
+    # Delete the element at the given index
     def delete(self, index):
         if index < 0 or index >= self.length:
             raise IndexError("Index out of range")
@@ -64,6 +75,7 @@ class LinkedList:
         current.next = current.next.next
         self.length -= 1
 
+    # Return all elements as a Python list
     def to_list(self):
         result = []
         current = self.head
@@ -73,12 +85,14 @@ class LinkedList:
         return result
 
 
+# A FIFO data structure — first element added is the first to be removed
 class Queue:
     def __init__(self):
         self.head = None
         self.tail = None
         self.length = 0
 
+    # Add a new element to the end of the queue
     def enqueue(self, value):
         new_node = Node(value)
         if self.tail is None:
@@ -89,6 +103,7 @@ class Queue:
             self.tail = new_node
         self.length += 1
 
+    # Remove and return the element from the head of the queue
     def dequeue(self):
         if self.head is None:
             raise IndexError("Queue is empty")
@@ -99,23 +114,27 @@ class Queue:
         self.length -= 1
         return value
 
+    # Return the value at the head of the queue without removing it
     def peek(self):
         if self.head is None:
             raise IndexError("Queue is empty")
         return self.head.value
 
 
+# A LIFO data structure — last element added is the first to be removed
 class Stack:
     def __init__(self):
         self.top = None
         self.length = 0
 
+    # Add a new element to the top of the stack
     def push(self, value):
         new_node = Node(value)
         new_node.next = self.top
         self.top = new_node
         self.length += 1
 
+    # Remove and return the element from the top of the stack
     def pop(self):
         if self.top is None:
             raise IndexError("Stack is empty")
@@ -124,12 +143,14 @@ class Stack:
         self.length -= 1
         return value
 
+    # Return the value at the top of the stack without removing it
     def peek(self):
         if self.top is None:
             raise IndexError("Stack is empty")
         return self.top.value
 
 
+# A single node in a Binary Search Tree with left and right children
 class BSTNode:
     def __init__(self, value):
         self.value = value
@@ -137,10 +158,12 @@ class BSTNode:
         self.right = None
 
 
+# A tree where left child is always smaller and right child is always larger
 class BinarySearchTree:
     def __init__(self):
         self.root = None
 
+    # Add a new element to the correct position in the tree
     def insert(self, value):
         new_node = BSTNode(value)
         if self.root is None:
@@ -159,6 +182,7 @@ class BinarySearchTree:
                     return
                 current = current.right
 
+    # Find and return the node with the given value, or None if not found
     def lookup(self, value):
         current = self.root
         while current:
@@ -170,9 +194,11 @@ class BinarySearchTree:
                 current = current.right
         return None
 
+    # Delete the node with the given value from the tree
     def delete(self, value):
         self.root = self._delete(self.root, value)
 
+    # Recursively find and remove the node, keeping the tree valid
     def _delete(self, node, value):
         if node is None:
             return None
@@ -193,14 +219,17 @@ class BinarySearchTree:
         return node
 
 
+# A key-value store that uses a hash function to find elements in O(1)
 class HashTable:
     def __init__(self):
         self.size = 10
         self.table = [[] for _ in range(self.size)]
 
+    # Convert a key into a table index
     def _hash(self, key):
         return hash(key) % self.size
 
+    # Add or update a key-value pair in the table
     def insert(self, key, value):
         index = self._hash(key)
         for pair in self.table[index]:
@@ -209,6 +238,7 @@ class HashTable:
                 return
         self.table[index].append([key, value])
 
+    # Return the value for the given key, or None if not found
     def lookup(self, key):
         index = self._hash(key)
         for pair in self.table[index]:
@@ -216,21 +246,25 @@ class HashTable:
                 return pair[1]
         return None
 
+    # Remove the key-value pair with the given key
     def delete(self, key):
         index = self._hash(key)
         self.table[index] = [p for p in self.table[index] if p[0] != key]
 
 
+# A single node in a graph that stores a value and its neighbors
 class GraphNode:
     def __init__(self, value):
         self.value = value
         self.neighbors = []
 
 
+# An undirected graph where nodes are connected by edges without weights
 class Graph:
     def __init__(self):
         self.nodes = []
 
+    # Add a new node and connect it to the given neighbors
     def insert(self, value, neighbors=None):
         new_node = GraphNode(value)
         self.nodes.append(new_node)
@@ -240,12 +274,14 @@ class Graph:
                 neighbor.neighbors.append(new_node)
         return new_node
 
+    # Find and return the node with the given value, or None if not found
     def lookup(self, value):
         for node in self.nodes:
             if node.value == value:
                 return node
         return None
 
+    # Remove a node and all its connections from the graph
     def delete(self, node):
         for neighbor in node.neighbors:
             neighbor.neighbors.remove(node)
