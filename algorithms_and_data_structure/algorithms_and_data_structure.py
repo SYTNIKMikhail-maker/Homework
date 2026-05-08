@@ -1,32 +1,29 @@
-"""Data Structures implementation without using built-in collections.
-Includes: LinkedList, Queue, Stack, BinarySearchTree, HashTable, Graph.
-"""
+# Data Structures implementation without using built-in collections.
+# Includes: LinkedList, Queue, Stack, BinarySearchTree, HashTable, Graph.
 
 
+# A single node that stores a value and a reference to the next node
 class Node:
-    """A single node that stores a value and a reference to the next node."""
-
     def __init__(self, value):
         self.value = value
         self.next = None
 
 
+# A linear data structure where each element points to the next one
 class LinkedList:
-    """A linear data structure where each element points to the next one."""
-
     def __init__(self):
         self.head = None
         self.length = 0
 
+    # Add a new element to the beginning of the list
     def prepend(self, value):
-        """Add a new element to the beginning of the list."""
         new_node = Node(value)
         new_node.next = self.head
         self.head = new_node
         self.length += 1
 
+    # Add a new element to the end of the list
     def append(self, value):
-        """Add a new element to the end of the list."""
         new_node = Node(value)
         if self.head is None:
             self.head = new_node
@@ -38,8 +35,8 @@ class LinkedList:
         current.next = new_node
         self.length += 1
 
+    # Return the index of the first element with the given value, or -1 if not found
     def lookup(self, value):
-        """Return the index of the first element with the given value, or -1 if not found."""
         current = self.head
         index = 0
         while current:
@@ -49,8 +46,8 @@ class LinkedList:
             index += 1
         return -1
 
+    # Insert a new element at the given index, shifting elements to the right
     def insert(self, index, value):
-        """Insert a new element at the given index, shifting elements to the right."""
         if index < 0 or index > self.length:
             raise IndexError("Index out of range")
         if index == 0:
@@ -64,8 +61,8 @@ class LinkedList:
         current.next = new_node
         self.length += 1
 
+    # Delete the element at the given index
     def delete(self, index):
-        """Delete the element at the given index."""
         if index < 0 or index >= self.length:
             raise IndexError("Index out of range")
         if index == 0:
@@ -78,8 +75,8 @@ class LinkedList:
         current.next = current.next.next
         self.length -= 1
 
+    # Return all elements as a Python list
     def to_list(self):
-        """Return all elements as a Python list."""
         result = []
         current = self.head
         while current:
@@ -88,16 +85,15 @@ class LinkedList:
         return result
 
 
+# A FIFO data structure — first element added is the first to be removed
 class Queue:
-    """A FIFO data structure — first element added is the first to be removed."""
-
     def __init__(self):
         self.head = None
         self.tail = None
         self.length = 0
 
+    # Add a new element to the end of the queue
     def enqueue(self, value):
-        """Add a new element to the end of the queue."""
         new_node = Node(value)
         if self.tail is None:
             self.head = new_node
@@ -107,8 +103,8 @@ class Queue:
             self.tail = new_node
         self.length += 1
 
+    # Remove and return the element from the head of the queue
     def dequeue(self):
-        """Remove and return the element from the head of the queue."""
         if self.head is None:
             raise IndexError("Queue is empty")
         value = self.head.value
@@ -118,29 +114,28 @@ class Queue:
         self.length -= 1
         return value
 
+    # Return the value at the head of the queue without removing it
     def peek(self):
-        """Return the value at the head of the queue without removing it."""
         if self.head is None:
             raise IndexError("Queue is empty")
         return self.head.value
 
 
+# A LIFO data structure — last element added is the first to be removed
 class Stack:
-    """A LIFO data structure — last element added is the first to be removed."""
-
     def __init__(self):
         self.top = None
         self.length = 0
 
+    # Add a new element to the top of the stack
     def push(self, value):
-        """Add a new element to the top of the stack."""
         new_node = Node(value)
         new_node.next = self.top
         self.top = new_node
         self.length += 1
 
+    # Remove and return the element from the top of the stack
     def pop(self):
-        """Remove and return the element from the top of the stack."""
         if self.top is None:
             raise IndexError("Stack is empty")
         value = self.top.value
@@ -148,30 +143,28 @@ class Stack:
         self.length -= 1
         return value
 
+    # Return the value at the top of the stack without removing it
     def peek(self):
-        """Return the value at the top of the stack without removing it."""
         if self.top is None:
             raise IndexError("Stack is empty")
         return self.top.value
 
 
+# A single node in a Binary Search Tree with left and right children
 class BSTNode:
-    """A single node in a Binary Search Tree with left and right children."""
-
     def __init__(self, value):
         self.value = value
         self.left = None
         self.right = None
 
 
+# A tree where left child is always smaller and right child is always larger
 class BinarySearchTree:
-    """A tree where left child is always smaller and right child is always larger."""
-
     def __init__(self):
         self.root = None
 
+    # Add a new element to the correct position in the tree
     def insert(self, value):
-        """Add a new element to the correct position in the tree."""
         new_node = BSTNode(value)
         if self.root is None:
             self.root = new_node
@@ -189,24 +182,24 @@ class BinarySearchTree:
                     return
                 current = current.right
 
+    # Find and return the node with the given value, or None if not found
     def lookup(self, value):
-        """Find and return the node with the given value, or None if not found."""
         current = self.root
         while current:
             if value == current.value:
                 return current
-            if value < current.value:
+            elif value < current.value:
                 current = current.left
             else:
                 current = current.right
         return None
 
+    # Delete the node with the given value from the tree
     def delete(self, value):
-        """Delete the node with the given value from the tree."""
         self.root = self._delete(self.root, value)
 
+    # Recursively find and remove the node, keeping the tree valid
     def _delete(self, node, value):
-        """Recursively find and remove the node, keeping the tree valid."""
         if node is None:
             return None
         if value < node.value:
@@ -226,19 +219,18 @@ class BinarySearchTree:
         return node
 
 
+# A key-value store that uses a hash function to find elements in O(1)
 class HashTable:
-    """A key-value store that uses a hash function to find elements in O(1)."""
-
     def __init__(self):
         self.size = 10
         self.table = [[] for _ in range(self.size)]
 
+    # Convert a key into a table index
     def _hash(self, key):
-        """Convert a key into a table index."""
         return hash(key) % self.size
 
+    # Add or update a key-value pair in the table
     def insert(self, key, value):
-        """Add or update a key-value pair in the table."""
         index = self._hash(key)
         for pair in self.table[index]:
             if pair[0] == key:
@@ -246,36 +238,34 @@ class HashTable:
                 return
         self.table[index].append([key, value])
 
+    # Return the value for the given key, or None if not found
     def lookup(self, key):
-        """Return the value for the given key, or None if not found."""
         index = self._hash(key)
         for pair in self.table[index]:
             if pair[0] == key:
                 return pair[1]
         return None
 
+    # Remove the key-value pair with the given key
     def delete(self, key):
-        """Remove the key-value pair with the given key."""
         index = self._hash(key)
         self.table[index] = [p for p in self.table[index] if p[0] != key]
 
 
+# A single node in a graph that stores a value and its neighbors
 class GraphNode:
-    """A single node in a graph that stores a value and its neighbors."""
-
     def __init__(self, value):
         self.value = value
         self.neighbors = []
 
 
+# An undirected graph where nodes are connected by edges without weights
 class Graph:
-    """An undirected graph where nodes are connected by edges without weights."""
-
     def __init__(self):
         self.nodes = []
 
+    # Add a new node and connect it to the given neighbors
     def insert(self, value, neighbors=None):
-        """Add a new node and connect it to the given neighbors."""
         new_node = GraphNode(value)
         self.nodes.append(new_node)
         if neighbors:
@@ -284,22 +274,21 @@ class Graph:
                 neighbor.neighbors.append(new_node)
         return new_node
 
+    # Find and return the node with the given value, or None if not found
     def lookup(self, value):
-        """Find and return the node with the given value, or None if not found."""
         for node in self.nodes:
             if node.value == value:
                 return node
         return None
 
+    # Remove a node and all its connections from the graph
     def delete(self, node):
-        """Remove a node and all its connections from the graph."""
         for neighbor in node.neighbors:
             neighbor.neighbors.remove(node)
         self.nodes.remove(node)
 
 
 def test_linked_list():
-    """Test LinkedList operations."""
     ll = LinkedList()
     ll.append(1)
     ll.append(2)
@@ -319,7 +308,6 @@ def test_linked_list():
 
 
 def test_queue():
-    """Test Queue operations."""
     q = Queue()
     q.enqueue(1)
     q.enqueue(2)
@@ -332,7 +320,6 @@ def test_queue():
 
 
 def test_stack():
-    """Test Stack operations."""
     s = Stack()
     s.push(1)
     s.push(2)
@@ -345,7 +332,6 @@ def test_stack():
 
 
 def test_bst():
-    """Test BinarySearchTree operations."""
     bst = BinarySearchTree()
     bst.insert(5)
     bst.insert(3)
@@ -361,7 +347,6 @@ def test_bst():
 
 
 def test_hash_table():
-    """Test HashTable operations."""
     ht = HashTable()
     ht.insert("name", "Misha")
     ht.insert("age", 22)
@@ -374,11 +359,10 @@ def test_hash_table():
 
 
 def test_graph():
-    """Test Graph operations."""
     g = Graph()
     a = g.insert("A")
     b = g.insert("B", [a])
-    g.insert("C", [a, b])
+    c = g.insert("C", [a, b])
     assert g.lookup("A") == a
     assert b in a.neighbors
     assert a in b.neighbors
