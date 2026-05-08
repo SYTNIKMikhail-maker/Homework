@@ -1,6 +1,7 @@
 import pytest
 from testing_to_test import Product, Shop
 
+
 @pytest.fixture
 def product():
     return Product("Apple", 1.5, 100)
