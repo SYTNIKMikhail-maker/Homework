@@ -1,0 +1,31 @@
+version: "3.8"
+services:
+  db:
+    image: postgres:14.2
+    restart: always
+    env_file:
+      - .env.list
+    environment:
+      PGDATA: /var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4:6.8
+    restart: always
+    env_file:
+      - .env.list
+    environment:
+      PGADMIN_LISTEN_PORT: 80
+    ports:
+      - "8080:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    links:
+      - "db:pgsql-server"
+
+volumes:
+  db-data:
+  pgadmin-data:
