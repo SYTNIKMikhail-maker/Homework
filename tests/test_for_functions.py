@@ -1,13 +1,5 @@
-
-
-
-
-
-
-
-
 import pytest
-from testing_to_test import even_odd,sum_all,time_of_day, calculate_total_textbook_cost
+from testing_to_test import calculate_total_textbook_cost
 
 @pytest.mark.parametrize("number, expected", [
     (2, "even"),

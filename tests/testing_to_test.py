@@ -2,6 +2,7 @@ import requests
 from datetime import datetime
 
 
+
 def even_odd(x):
     """Checks number if it even or odd.
 
