@@ -118,3 +118,4 @@ def test_build_result_values(raw_df):
     assert rows["1"]["9months"] is False
     assert rows["1"]["11months"] is False
     assert rows["2"]["5months"] is False
+    
