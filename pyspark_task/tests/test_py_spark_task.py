@@ -1,9 +1,7 @@
 """Unit tests for enroll module."""
 
 import pytest
-from datetime import datetime
-from pyspark.sql import SparkSession
-from src.enroll import (
+from pyspark_task.src.py_spark_task import (
     parse_dates,
     filter_last_year,
     add_year_month,
@@ -118,4 +116,3 @@ def test_build_result_values(raw_df):
     assert rows["1"]["9months"] is False
     assert rows["1"]["11months"] is False
     assert rows["2"]["5months"] is False
-    
