@@ -3,4 +3,11 @@
 .venv
 __pycache__/
 *.py[cod]
+data/input/*
+data/output/*
+!data/input/.gitkeep
+!data/output/.gitkeep
+*.log
+.pytest_cache/
+
 
