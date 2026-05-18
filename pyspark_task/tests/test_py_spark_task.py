@@ -11,7 +11,7 @@ from pyspark_task.src.py_spark_task import (
     build_result,
 )
 
-from pyspark.sql import functions as F
+from pyspark.sql import SparkSession, functions as F
 from dateutil.relativedelta import relativedelta
 
 END_DATE = datetime(2016, 9, 30)
