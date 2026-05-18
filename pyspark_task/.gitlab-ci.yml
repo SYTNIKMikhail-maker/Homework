@@ -1,0 +1,31 @@
+stages:
+  - lint
+  - test
+  - build
+
+variables:
+  JAVA_HOME: /usr/lib/jvm/default-java
+
+image: python:3.11-slim
+
+before_script:
+  - apt-get update && apt-get install -y default-jdk
+  - pip install -r requirements.txt
+
+lint:
+  stage: lint
+  script:
+    - pylint src/enroll.py --rcfile=.pylintrc
+
+test:
+  stage: test
+  script:
+    - pytest tests/ -v
+
+build:
+  stage: build
+  script:
+    - docker build -t enroll_task .
+  only:
+    - master
+    - dev
