@@ -1,18 +1,20 @@
-from algorithms_and_data_structure.data_structure.data_structures import Graph
+from data_structures import Graph
 
 
-def test_graph():
+def test_graph_insert_lookup():
     g = Graph()
     a = g.insert("A")
     b = g.insert("B", [a])
-    c = g.insert("C", [a, b])
+    g.insert("C", [a, b])
     assert g.lookup("A") == a
     assert b in a.neighbors
     assert a in b.neighbors
+
+
+def test_graph_delete():
+    g = Graph()
+    a = g.insert("A")
+    b = g.insert("B", [a])
     g.delete(b)
     assert b not in a.neighbors
     assert g.lookup("B") is None
-    print("Graph is normal")
-
-
-test_graph()
