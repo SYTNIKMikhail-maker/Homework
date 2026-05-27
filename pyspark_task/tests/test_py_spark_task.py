@@ -9,6 +9,7 @@ from pyspark_task.src.py_spark_task import (
     get_required_months,
     check_consecutive,
     build_result,
+    CONSECUTIVE_MONTHS
 )
 
 from pyspark.sql import SparkSession, functions as F
@@ -96,7 +97,7 @@ def test_build_result_schema(raw_df):
     df = parse_dates(raw_df)
     df = filter_last_year(df, END_DATE)
     df = add_year_month(df)
-    result = build_result(df, END_DATE, [5, 9, 11])
+    result = build_result(df, END_DATE, CONSECUTIVE_MONTHS)
 
     assert set(result.columns) == {"patient_id", "5months", "9months", "11months"}
     schema_map = {f.name: f.dataType.simpleString() for f in result.schema}
@@ -110,7 +111,7 @@ def test_build_result_values(raw_df):
     df = parse_dates(raw_df)
     df = filter_last_year(df, END_DATE)
     df = add_year_month(df)
-    result = build_result(df, END_DATE, [5, 9, 11])
+    result = build_result(df, END_DATE, CONSECUTIVE_MONTHS)
 
     rows = {r["patient_id"]: r for r in result.collect()}
     assert rows["1"]["5months"] is True

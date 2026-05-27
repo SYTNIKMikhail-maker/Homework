@@ -2,8 +2,9 @@
 
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from pyspark.sql import SparkSession
-from pyspark.sql import functions as F
+
+from pyspark.sql import SparkSession, DataFrame
+import pyspark.sql.functions as F
 from pyspark.sql.types import StringType
 
 
@@ -18,12 +19,12 @@ def create_spark_session(app_name: str = "enroll") -> SparkSession:
     return SparkSession.builder.appName(app_name).getOrCreate()
 
 
-def load_data(spark: SparkSession, path: str):
+def load_data(spark: SparkSession, path: str) -> DataFrame:
     """Load CSV data into a Spark DataFrame."""
     return spark.read.csv(path, header=True, inferSchema=True)
 
 
-def parse_dates(df):
+def parse_dates(df: DataFrame) -> DataFrame:
     """Parse effective_from_date column to date type."""
     return df.withColumn(
         "visit_date",
@@ -31,7 +32,7 @@ def parse_dates(df):
     )
 
 
-def filter_last_year(df, end_date: datetime):
+def filter_last_year(df: DataFrame, end_date: datetime) -> DataFrame:
     """Filter records within one year before end_date."""
     start_date = end_date - relativedelta(years=1)
     return df.filter(
@@ -40,7 +41,7 @@ def filter_last_year(df, end_date: datetime):
     )
 
 
-def add_year_month(df):
+def add_year_month(df: DataFrame) -> DataFrame:
     """Add year_month column in format yyyy-MM."""
     return df.withColumn(
         "year_month",
@@ -56,7 +57,7 @@ def get_required_months(end_date: datetime, n_months: int) -> list:
     ]
 
 
-def check_consecutive(df, end_date: datetime, n_months: int):
+def check_consecutive(df: DataFrame, end_date: datetime, n_months: int) -> DataFrame:
     """
     Check if each patient visited every month
     in the last n_months window up to end_date.
@@ -76,7 +77,7 @@ def check_consecutive(df, end_date: datetime, n_months: int):
     ).select("patient_id", col_name)
 
 
-def build_result(df_months, end_date: datetime, months_list: list):
+def build_result(df_months: DataFrame, end_date: datetime, months_list: list) -> DataFrame:
     """Join consecutive check results for all month windows."""
     all_patients = df_months.select("patient_id").distinct()
 
@@ -88,7 +89,7 @@ def build_result(df_months, end_date: datetime, months_list: list):
     return result.fillna(False).orderBy("patient_id")
 
 
-def save_result(df, path: str) -> None:
+def save_result(df: DataFrame, path: str) -> None:
     """Save DataFrame to CSV."""
     df.coalesce(1).write.csv(path, header=True, mode="overwrite")
 
@@ -102,9 +103,6 @@ def main() -> None:
     df_filtered = filter_last_year(df_parsed, END_DATE)
     df_months = add_year_month(df_filtered)
     result = build_result(df_months, END_DATE, CONSECUTIVE_MONTHS)
-
-    result.show()
-    result.printSchema()
     save_result(result, OUTPUT_PATH)
 
 
