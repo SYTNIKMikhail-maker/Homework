@@ -1,28 +1,21 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime
+from airflow.providers.postgres.hooks.postgres import PostgresHook
 
 
 def cleanup_raw(**context):
-    import psycopg2
 
-    conn = psycopg2.connect(
-        host="postgres",
-        database="airflow",
-        user="airflow",
-        password="airflow"
-    )
-
-    cursor = conn.cursor()
-    cursor.execute("TRUNCATE TABLE raw.covid;")
-    cursor.execute("TRUNCATE TABLE raw.countries;")
-    conn.commit()
-    cursor.close()
-    conn.close()
+    hook = PostgresHook(postgres_conn_id = 'postgre_conn')
+    sql = """
+        TRUNCATE TABLE raw.covid_data;
+        TRUNCATE TABLE raw.countries_data;
+    """
+    hook.run(sql)
 
 with DAG(
     dag_id="cleanup_dag",
-    start_date=datetime(2024, 1, 1),
+    start_date=datetime(2026, 5, 28),
     schedule=None,
     catchup=False
 ) as dag:

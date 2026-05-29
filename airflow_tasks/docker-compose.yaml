@@ -8,18 +8,8 @@ services:
       POSTGRES_DB: airflow
     ports:
       - "5432:5432"
-
-  minio:
-    image: minio/minio
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    command: server /data --console-address ":9001"
     volumes:
-      - ./minio_data:/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
   webserver:
     build: .
@@ -38,7 +28,7 @@ services:
 
   scheduler:
     build: .
-    command: bash -c "airflow db upgrade && airflow users create --username airflow --password airflow --firstname Airflow --lastname Admin --role Admin --email admin@example.com || true && airflow scheduler"
+    command: bash -c "airflow db init && airflow users create --username airflow --password airflow --firstname Airflow --lastname Admin --role Admin --email admin@example.com && airflow scheduler"
     depends_on:
       - postgres
     environment:
@@ -48,3 +38,15 @@ services:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
+
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - ./minio_data:/data

@@ -2,6 +2,8 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime
 import requests
+import os
+import shutil
 
 
 def extract_covid(**context):
@@ -15,14 +17,12 @@ def extract_covid(**context):
 def transform_covid(**context):
     from pyspark.sql import SparkSession
     from pyspark.sql import Row
-    from pyspark.sql.functions import lit
 
     data = context["ti"].xcom_pull(task_ids="extract_covid", key="covid_raw")
 
     spark = SparkSession.builder \
         .appName("covid_transform") \
         .getOrCreate()
-
 
     rows = []
     for item in data:
@@ -44,17 +44,20 @@ def transform_covid(**context):
 
 def load_to_minio(**context):
     import boto3
-    import os
-    import json
+    from pyspark.sql import SparkSession
+
+    local_output_dir = "/tmp/covid_parquet_local"
+    if os.path.exists(local_output_dir):
+        shutil.rmtree(local_output_dir)
+    os.makedirs(local_output_dir)
 
     data = context["ti"].xcom_pull(task_ids="transform_covid", key="covid_transformed")
 
-    from pyspark.sql import SparkSession
     spark = SparkSession.builder.appName("covid_load").getOrCreate()
     df = spark.read.json(spark.sparkContext.parallelize(data))
-    df.write.mode("overwrite").parquet("/tmp/covid_parquet")
-    spark.stop()
 
+    df.write.mode("overwrite").parquet(local_output_dir)
+    spark.stop()
 
     s3 = boto3.client(
         "s3",
@@ -64,22 +67,22 @@ def load_to_minio(**context):
     )
 
     date_path = datetime.now().strftime("%Y/%m/%d")
-    for file in os.listdir("/tmp/covid_parquet"):
+    for file in os.listdir(local_output_dir):
         if file.endswith(".parquet"):
-            filepath = f"/tmp/covid_parquet/{file}"
+            filepath = f"{local_output_dir}/{file}"
             s3.upload_file(filepath, "covid-data", f"parquet/{date_path}/{file}")
-            print(f"Загружен: {file}")
+
+    shutil.rmtree(local_output_dir)
 
 
 with DAG(
-    dag_id="covid_dag",
-    start_date=datetime(2024, 1, 1),
-    schedule="@daily",
-    catchup=False
+        dag_id="covid_dag",
+        start_date=datetime(2026, 5, 28),
+        schedule="@daily",
+        catchup=False
 ) as dag:
-
-    t1 = PythonOperator(task_id="extract_covid",   python_callable=extract_covid)
+    t1 = PythonOperator(task_id="extract_covid", python_callable=extract_covid)
     t2 = PythonOperator(task_id="transform_covid", python_callable=transform_covid)
-    t3 = PythonOperator(task_id="load_to_minio",   python_callable=load_to_minio)
+    t3 = PythonOperator(task_id="load_to_minio", python_callable=load_to_minio)
 
     t1 >> t2 >> t3

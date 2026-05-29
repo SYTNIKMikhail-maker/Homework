@@ -4,6 +4,8 @@ from datetime import datetime
 import requests
 import boto3
 import os
+import shutil
+
 
 def extract_countries(**context):
     url = "https://api.worldbank.org/v2/country?format=json&per_page=300"
@@ -39,14 +41,19 @@ def transform_countries(**context):
 
 
 def load_to_minio(**context):
+    from pyspark.sql import SparkSession
 
+    local_output_dir = "/tmp/countries_parquet_local"
+    if os.path.exists(local_output_dir):
+        shutil.rmtree(local_output_dir)
+    os.makedirs(local_output_dir)
 
     data = context["ti"].xcom_pull(task_ids="transform_countries", key="countries_transformed")
 
-    from pyspark.sql import SparkSession
     spark = SparkSession.builder.appName("countries_load").getOrCreate()
     df = spark.read.json(spark.sparkContext.parallelize(data))
-    df.write.mode("overwrite").parquet("/tmp/countries_parquet")
+
+    df.write.mode("overwrite").parquet(local_output_dir)
     spark.stop()
 
     s3 = boto3.client(
@@ -57,21 +64,21 @@ def load_to_minio(**context):
     )
 
     date_path = datetime.now().strftime("%Y/%m")
-    for file in os.listdir("/tmp/countries_parquet"):
+    for file in os.listdir(local_output_dir):
         if file.endswith(".parquet"):
-            filepath = f"/tmp/countries_parquet/{file}"
+            filepath = f"{local_output_dir}/{file}"
             s3.upload_file(filepath, "countries-data", f"parquet/{date_path}/{file}")
+    shutil.rmtree(local_output_dir)
 
 
 with DAG(
-    dag_id="countries_dag",
-    start_date=datetime(2024, 1, 1),
-    schedule="@monthly",
-    catchup=False
+        dag_id="countries_dag",
+        start_date=datetime(2026, 5, 28),
+        schedule="@monthly",
+        catchup=False
 ) as dag:
-
-    t1 = PythonOperator(task_id="extract_countries",   python_callable=extract_countries)
+    t1 = PythonOperator(task_id="extract_countries", python_callable=extract_countries)
     t2 = PythonOperator(task_id="transform_countries", python_callable=transform_countries)
-    t3 = PythonOperator(task_id="load_to_minio",       python_callable=load_to_minio)
+    t3 = PythonOperator(task_id="load_to_minio", python_callable=load_to_minio)
 
     t1 >> t2 >> t3

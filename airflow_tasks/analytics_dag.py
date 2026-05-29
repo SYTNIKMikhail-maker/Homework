@@ -1,17 +1,21 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime
-
+from airflow.providers.postgres.operators.postgres import PostgresOperator
 
 def run_analytics(**context):
     from pyspark.sql import SparkSession
 
-    spark = SparkSession.builder.appName("analytics").getOrCreate()
+    spark = SparkSession.builder \
+        .appName("analytics") \
+        .config("spark.jars", "/home/airflow/jars/postgresql-42.6.0.jar") \
+        .config("spark.driver.extraClassPath", "/home/airflow/jars/postgresql-42.6.0.jar") \
+        .getOrCreate()
 
     covid = spark.read \
         .format("jdbc") \
         .option("url", "jdbc:postgresql://postgres:5432/airflow") \
-        .option("dbtable", "warehouse.covid") \
+        .option("dbtable", "warehouse.covid_data") \
         .option("user", "airflow") \
         .option("password", "airflow") \
         .option("driver", "org.postgresql.Driver") \
@@ -20,7 +24,7 @@ def run_analytics(**context):
     countries = spark.read \
         .format("jdbc") \
         .option("url", "jdbc:postgresql://postgres:5432/airflow") \
-        .option("dbtable", "warehouse.countries") \
+        .option("dbtable", "warehouse.countries_data") \
         .option("user", "airflow") \
         .option("password", "airflow") \
         .option("driver", "org.postgresql.Driver") \
@@ -28,12 +32,21 @@ def run_analytics(**context):
 
     df = covid.join(countries, covid.country == countries.country_name, "left")
 
-    df.show(10)
+    final_df = df.select(
+        covid["country"],
+        covid["date"],
+        covid["cases"].alias("covid_cases"),
+        covid["deaths"],
+        covid["recovered"],
+        covid["active"],
+        countries["region"],
+        countries["income_level"]
+    )
 
-    df.write \
+    final_df.write \
         .format("jdbc") \
         .option("url", "jdbc:postgresql://postgres:5432/airflow") \
-        .option("dbtable", "warehouse.covid_countries") \
+        .option("dbtable", "warehouse.covid_countries_data") \
         .option("user", "airflow") \
         .option("password", "airflow") \
         .option("driver", "org.postgresql.Driver") \
@@ -45,9 +58,22 @@ def run_analytics(**context):
 
 with DAG(
     dag_id="analytics_dag",
-    start_date=datetime(2024, 1, 1),
+    start_date=datetime(2026, 5, 28),
     schedule="@daily",
     catchup=False
 ) as dag:
 
-    t1 = PythonOperator(task_id="run_analytics", python_callable=run_analytics)
+    t1 = create_countries_table = PostgresOperator(
+        task_id='create_covid_countries_table',
+        postgres_conn_id='postgre_conn',
+        sql=""" CREATE TABLE IF NOT EXISTS warehouse.covid_countries_data (
+            country_name TEXT,
+            country_code TEXT,
+            population BIGINT,
+            region TEXT
+        );
+        """)
+
+    t2 = PythonOperator(task_id="run_analytics", python_callable=run_analytics)
+
+    t1 >> t2
