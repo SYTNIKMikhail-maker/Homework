@@ -94,3 +94,4 @@ with DAG(
     t3 = PythonOperator(task_id="load_to_minio", python_callable=load_to_minio)
 
     t1 >> t2 >> t3
+

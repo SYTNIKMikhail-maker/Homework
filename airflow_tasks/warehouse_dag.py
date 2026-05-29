@@ -4,9 +4,9 @@ Flow: create_covid_table >> load_covid_to_warehouse
       create_countries_table >> load_countries_to_warehouse
 """
 
+from datetime import datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from datetime import datetime
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 
 

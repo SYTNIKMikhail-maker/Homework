@@ -4,12 +4,12 @@ Flow: create_covid_table >> load_covid_to_raw
       create_countries_table >> load_countries_to_raw
 """
 
-from airflow import DAG
-from airflow.operators.python import PythonOperator
 from datetime import datetime
-import boto3
 import os
 import shutil
+from airflow import DAG
+from airflow.operators.python import PythonOperator
+import boto3
 from pyspark.sql import SparkSession
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 

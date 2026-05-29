@@ -3,9 +3,9 @@ Daily pipeline: join warehouse.covid_data with warehouse.countries_data and writ
 Flow: create_covid_countries_table >> run_analytics
 """
 
+from datetime import datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from datetime import datetime
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 
 

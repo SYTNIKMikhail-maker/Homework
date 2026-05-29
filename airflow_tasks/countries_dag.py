@@ -2,14 +2,14 @@
 Monthly ETL pipeline: World Bank API → PySpark transform → MinIO (Parquet).
 Flow: extract_countries >> transform_countries >> load_to_minio
 """
-
-from airflow import DAG
-from airflow.operators.python import PythonOperator
-from datetime import datetime
-import requests
-import boto3
 import os
 import shutil
+from datetime import datetime
+from airflow import DAG
+from airflow.operators.python import PythonOperator
+import requests
+import boto3
+
 
 
 def extract_countries(**context):

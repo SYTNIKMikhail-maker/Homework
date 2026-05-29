@@ -3,9 +3,9 @@ Manual DAG: truncates raw.covid_data and raw.countries_data.
 Triggered on-demand via schedule=None.
 """
 
+from datetime import datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from datetime import datetime
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 
 
