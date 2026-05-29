@@ -1,3 +1,9 @@
+"""
+Daily pipeline: download Parquet from MinIO → load into PostgreSQL raw schema.
+Flow: create_covid_table >> load_covid_to_raw
+      create_countries_table >> load_countries_to_raw
+"""
+
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime
@@ -9,6 +15,7 @@ from airflow.providers.postgres.operators.postgres import PostgresOperator
 
 
 def load_covid_to_raw(**context):
+    """Download today's COVID Parquet from MinIO and write to raw.covid_data via JDBC."""
     download_dir = "/tmp/covid_data"
     if os.path.exists(download_dir):
         shutil.rmtree(download_dir)
@@ -51,6 +58,7 @@ def load_covid_to_raw(**context):
 
 
 def load_countries_to_raw(**context):
+    """Download current month's countries Parquet from MinIO and write to raw.countries_data via JDBC."""
     download_dir = "/tmp/countries_data"
     if os.path.exists(download_dir):
         shutil.rmtree(download_dir)
@@ -91,35 +99,35 @@ def load_countries_to_raw(**context):
 
     spark.stop()
 
+
 with DAG(
     dag_id="raw_load_dag",
     start_date=datetime(2026, 5, 28),
     schedule="@daily",
     catchup=False
-)as dag:
+) as dag:
 
     t1 = PostgresOperator(
-    task_id = 'create_covid_table',
-    postgres_conn_id='postgre_conn',
-    sql = """ CREATE TABLE IF NOT EXISTS raw.covid_data (
-        date DATE,
-        country TEXT,
-        cases INT,
-        death INT,
-        recovered INT 
-    );
-    """)
+        task_id="create_covid_table",
+        postgres_conn_id="postgre_conn",
+        sql="""CREATE TABLE IF NOT EXISTS raw.covid_data (
+            date DATE,
+            country TEXT,
+            cases INT,
+            death INT,
+            recovered INT
+        );""")
 
-    t3 = create_countries_table = PostgresOperator(
-    task_id = 'create_countries_table',
-    postgres_conn_id='postgre_conn',
-    sql = """ CREATE TABLE IF NOT EXISTS raw.countries_data (
-        country_name TEXT,
-        country_code TEXT,
-        population BIGINT,
-        region TEXT
-    );
-    """)
+    t3 = PostgresOperator(
+        task_id="create_countries_table",
+        postgres_conn_id="postgre_conn",
+        sql="""CREATE TABLE IF NOT EXISTS raw.countries_data (
+            country_name TEXT,
+            country_code TEXT,
+            population BIGINT,
+            region TEXT
+        );""")
+
     t2 = PythonOperator(task_id="load_covid_to_raw",     python_callable=load_covid_to_raw)
     t4 = PythonOperator(task_id="load_countries_to_raw", python_callable=load_countries_to_raw)
 

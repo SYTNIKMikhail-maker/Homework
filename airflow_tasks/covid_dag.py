@@ -1,3 +1,8 @@
+"""
+Daily ETL pipeline: COVID-19 stats API → PySpark transform → MinIO (Parquet).
+Flow: extract_covid >> transform_covid >> load_to_minio
+"""
+
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime
@@ -7,6 +12,7 @@ import shutil
 
 
 def extract_covid(**context):
+    """Fetch COVID-19 stats for all countries and push raw list to XCom."""
     url = "https://disease.sh/v3/covid-19/countries"
     response = requests.get(url)
     data = response.json()
@@ -15,6 +21,7 @@ def extract_covid(**context):
 
 
 def transform_covid(**context):
+    """Pull raw COVID data from XCom, build Spark DataFrame, push as JSON strings."""
     from pyspark.sql import SparkSession
     from pyspark.sql import Row
 
@@ -43,6 +50,7 @@ def transform_covid(**context):
 
 
 def load_to_minio(**context):
+    """Write transformed data to local Parquet, then upload to MinIO bucket."""
     import boto3
     from pyspark.sql import SparkSession
 

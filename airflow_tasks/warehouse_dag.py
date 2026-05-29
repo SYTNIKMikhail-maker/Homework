@@ -1,9 +1,17 @@
+"""
+Daily pipeline: deduplicate raw schema tables and load into warehouse schema.
+Flow: create_covid_table >> load_covid_to_warehouse
+      create_countries_table >> load_countries_to_warehouse
+"""
+
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 
+
 def load_covid_to_warehouse(**context):
+    """Read raw.covid_data via JDBC, deduplicate, and write to warehouse.covid_data."""
     from pyspark.sql import SparkSession
 
     spark = SparkSession.builder \
@@ -37,6 +45,7 @@ def load_covid_to_warehouse(**context):
 
 
 def load_countries_to_warehouse(**context):
+    """Read raw.countries_data via JDBC, deduplicate, and write to warehouse.countries_data."""
     from pyspark.sql import SparkSession
 
     spark = SparkSession.builder \
@@ -77,25 +86,23 @@ with DAG(
 ) as dag:
 
     t1 = PostgresOperator(
-    task_id = 'create_covid_table',
-    postgres_conn_id='postgre_conn',
-    sql = """ CREATE TABLE IF NOT EXISTS warehouse.covid_data (
-        date DATE,
-        country TEXT,
-        cases INT
-    );
-    """)
+        task_id="create_covid_table",
+        postgres_conn_id="postgre_conn",
+        sql="""CREATE TABLE IF NOT EXISTS warehouse.covid_data (
+            date DATE,
+            country TEXT,
+            cases INT
+        );""")
 
-    t3 = create_countries_table = PostgresOperator(
-    task_id = 'create_countries_table',
-    postgres_conn_id='postgre_conn',
-    sql = """ CREATE TABLE IF NOT EXISTS warehouse.countries_data (
-        country_name TEXT,
-        country_code TEXT,
-        population BIGINT,
-        region TEXT
-    );
-    """)
+    t3 = PostgresOperator(
+        task_id="create_countries_table",
+        postgres_conn_id="postgre_conn",
+        sql="""CREATE TABLE IF NOT EXISTS warehouse.countries_data (
+            country_name TEXT,
+            country_code TEXT,
+            population BIGINT,
+            region TEXT
+        );""")
 
     t2 = PythonOperator(task_id="load_covid_to_warehouse",     python_callable=load_covid_to_warehouse)
     t4 = PythonOperator(task_id="load_countries_to_warehouse", python_callable=load_countries_to_warehouse)

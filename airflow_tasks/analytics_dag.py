@@ -1,9 +1,16 @@
+"""
+Daily pipeline: join warehouse.covid_data with warehouse.countries_data and write to warehouse.covid_countries_data.
+Flow: create_covid_countries_table >> run_analytics
+"""
+
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 
+
 def run_analytics(**context):
+    """Join covid and countries warehouse tables and write result to warehouse.covid_countries_data."""
     from pyspark.sql import SparkSession
 
     spark = SparkSession.builder \
@@ -63,16 +70,15 @@ with DAG(
     catchup=False
 ) as dag:
 
-    t1 = create_countries_table = PostgresOperator(
-        task_id='create_covid_countries_table',
-        postgres_conn_id='postgre_conn',
-        sql=""" CREATE TABLE IF NOT EXISTS warehouse.covid_countries_data (
+    t1 = PostgresOperator(
+        task_id="create_covid_countries_table",
+        postgres_conn_id="postgre_conn",
+        sql="""CREATE TABLE IF NOT EXISTS warehouse.covid_countries_data (
             country_name TEXT,
             country_code TEXT,
             population BIGINT,
             region TEXT
-        );
-        """)
+        );""")
 
     t2 = PythonOperator(task_id="run_analytics", python_callable=run_analytics)
 

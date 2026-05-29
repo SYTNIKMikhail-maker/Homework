@@ -1,3 +1,8 @@
+"""
+Monthly ETL pipeline: World Bank API → PySpark transform → MinIO (Parquet).
+Flow: extract_countries >> transform_countries >> load_to_minio
+"""
+
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime
@@ -8,6 +13,7 @@ import shutil
 
 
 def extract_countries(**context):
+    """Fetch all countries from World Bank API and push raw list to XCom."""
     url = "https://api.worldbank.org/v2/country?format=json&per_page=300"
     response = requests.get(url)
     data = response.json()
@@ -16,6 +22,7 @@ def extract_countries(**context):
 
 
 def transform_countries(**context):
+    """Pull raw countries from XCom, build Spark DataFrame, push as JSON strings."""
     from pyspark.sql import SparkSession, Row
 
     data = context["ti"].xcom_pull(task_ids="extract_countries", key="countries_raw")
@@ -41,6 +48,7 @@ def transform_countries(**context):
 
 
 def load_to_minio(**context):
+    """Write transformed data to local Parquet, then upload to MinIO bucket."""
     from pyspark.sql import SparkSession
 
     local_output_dir = "/tmp/countries_parquet_local"

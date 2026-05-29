@@ -1,3 +1,8 @@
+"""
+Manual DAG: truncates raw.covid_data and raw.countries_data.
+Triggered on-demand via schedule=None.
+"""
+
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime
@@ -5,13 +10,14 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 
 
 def cleanup_raw(**context):
-
-    hook = PostgresHook(postgres_conn_id = 'postgre_conn')
+    """Truncate both raw schema tables to free space before next load."""
+    hook = PostgresHook(postgres_conn_id="postgre_conn")
     sql = """
         TRUNCATE TABLE raw.covid_data;
         TRUNCATE TABLE raw.countries_data;
     """
     hook.run(sql)
+
 
 with DAG(
     dag_id="cleanup_dag",
