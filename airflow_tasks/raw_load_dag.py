@@ -72,7 +72,7 @@ with DAG(
             date DATE,
             country TEXT,
             cases INT,
-            death INT,
+            deaths INT,
             recovered INT
         );""")
 

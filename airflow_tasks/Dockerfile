@@ -12,4 +12,10 @@ RUN mkdir -p /home/airflow/jars && \
 
 USER airflow
 
-RUN pip install pyspark==3.4.0 apache-airflow-providers-amazon boto3
+RUN pip install apache-airflow-providers-postgres \
+                apache-airflow-providers-apache-spark
+
+RUN pip install pyspark==3.4.0 \
+                apache-airflow-providers-amazon \
+                boto3 \
+                apache-airflow-providers-openlineage==1.0.2

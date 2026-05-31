@@ -19,7 +19,7 @@ with DAG(
         task_id="cleanup_raw",
         postgres_conn_id="postgre_conn",
         sql = """
-        TRUNCATE TABLE raw.conid_data;
+        TRUNCATE TABLE raw.covid_data;
         TRUNCATE TABLE raw.countries_data;
         """
     )

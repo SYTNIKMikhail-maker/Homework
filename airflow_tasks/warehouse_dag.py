@@ -65,7 +65,6 @@ with DAG(
             cases INT,
             deaths INT,
             recovered INT,
-            active INT
         );""")
 
     t3 = PostgresOperator(
@@ -76,7 +75,6 @@ with DAG(
             country_code TEXT,
             population BIGINT,
             region TEXT,
-            income_level TEXT
         );""")
 
     t2 = PythonOperator(

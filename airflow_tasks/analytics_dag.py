@@ -7,6 +7,7 @@ from datetime import datetime
 from airflow import DAG
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
+from airflow.hooks.base import BaseHook
 
 with DAG(
     dag_id="analytics_dag",
@@ -28,6 +29,8 @@ with DAG(
             income_level TEXT
         );""")
 
+    conn = BaseHook.get_connection("postgre_conn")
+
     t2 = SparkSubmitOperator(
         task_id="run_analytics",
         application="/opt/airflow/airflow_tasks/spark_jobs/analytics_job.py",
@@ -35,8 +38,8 @@ with DAG(
         name="covid_countries_join",
         verbose=True,
         env_vars = {
-        "POSTGRES_USER": "{{ conn.postgre_conn.login }}",
-        "POSTGRES_PASSWORD": "{{ conn.postgre_conn.password }}",
+        "POSTGRES_USER": conn.login,
+        "POSTGRES_PASSWORD": conn.password,
         "POSTGRES_URL": "jdbc:postgresql://postgres:5432/airflow"
     }
 
