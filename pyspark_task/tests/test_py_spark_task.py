@@ -23,6 +23,7 @@ MONTHS_ARRAY = [5, 9, 11]
 
 @pytest.fixture(scope="session")
 def spark():
+    """Create shared SparkSession for all tests."""
     return (
         SparkSession.builder
         .master("local[1]")
@@ -33,6 +34,7 @@ def spark():
 
 @pytest.fixture
 def raw_df(spark):
+    """Return raw DataFrame with patient visits in MMddyyyy format."""
     data = [
         ("1", "09012016"),
         ("2", "09012016"),
@@ -52,6 +54,7 @@ def raw_df(spark):
 
 
 def test_parse_dates(raw_df):
+    """Check that visit_date column is created and parsed correctly."""
     df = parse_dates(raw_df)
 
     assert "visit_date" in df.columns
@@ -61,6 +64,7 @@ def test_parse_dates(raw_df):
 
 
 def test_filter_last_year(raw_df):
+    """Verify no records exist before the one-year cutoff date."""
     df = parse_dates(raw_df)
     df_filtered = filter_last_year(df, END_DATE)
 
@@ -74,6 +78,7 @@ def test_filter_last_year(raw_df):
 
 
 def test_get_required_months():
+    """Ensure correct list of 5 months ending at END_DATE is generated."""
     actual = get_required_months(END_DATE, 5)
 
     expected = ["2016-05", "2016-06", "2016-07", "2016-08", "2016-09"]
@@ -82,13 +87,16 @@ def test_get_required_months():
 
 
 def test_check_consecutive_5months(spark):
+    """Check consecutive visit logic for a 5-month window."""
     df_for_test = spark.createDataFrame(
         [
-            ("1", ["2016-05", "2016-06", "2016-07", "2016-08", "2016-09"]),
-            ("2", ["2016-05", "2016-06"]),
-            ("3", ["2016-01", "2016-02", "2016-03", "2016-04", "2016-05"]),
+            ("1", "2016-05"), ("1", "2016-06"), ("1", "2016-07"),
+            ("1", "2016-08"), ("1", "2016-09"),
+            ("2", "2016-05"), ("2", "2016-06"),
+            ("3", "2016-01"), ("3", "2016-02"), ("3", "2016-03"),
+            ("3", "2016-04"), ("3", "2016-05"),
         ],
-        ["patient_id", "visited_months"],
+        ["patient_id", "year_month"],
     )
 
     actual_df = check_consecutive(df_for_test, END_DATE, 5)
@@ -99,10 +107,11 @@ def test_check_consecutive_5months(spark):
         Row(patient_id="3", **{"5months": False}),
     ])
 
-    assert_df_equality(actual_df, expected_df)
+    assert_df_equality(actual_df, expected_df, ignore_row_order=True)
 
 
 def test_build_result_schema(raw_df):
+    """Confirm result has correct columns and all flags are boolean type."""
     df = parse_dates(raw_df)
     df = filter_last_year(df, END_DATE)
     df = add_year_month(df)
@@ -121,6 +130,7 @@ def test_build_result_schema(raw_df):
 
 
 def test_build_result_values(raw_df):
+    """Verify patient 1 visited 5 months in a row but not 9 or 11."""
     df = parse_dates(raw_df)
     df = filter_last_year(df, END_DATE)
     df = add_year_month(df)
