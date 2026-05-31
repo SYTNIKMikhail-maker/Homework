@@ -6,16 +6,20 @@ Flow: create_covid_table >> load_covid_to_warehouse
 
 from datetime import datetime
 from airflow import DAG
+from pyspark.sql import SparkSession
 from airflow.operators.python import PythonOperator
 from airflow.providers.postgres.operators.postgres import PostgresOperator
+from airflow.hooks.base import BaseHook
 
 
-def load_covid_to_warehouse(**context):
+
+def load_raw_data_to_warehouse(raw_table: str, dwh_table: str,app_name:str,**context):
     """Read raw.covid_data via JDBC, deduplicate, and write to warehouse.covid_data."""
-    from pyspark.sql import SparkSession
+
+    conn = BaseHook.get_connection("postgre_conn")
 
     spark = SparkSession.builder \
-        .appName("warehouse_covid") \
+        .appName(app_name) \
         .config("spark.jars", "/home/airflow/jars/postgresql-42.6.0.jar") \
         .config("spark.driver.extraClassPath", "/home/airflow/jars/postgresql-42.6.0.jar") \
         .getOrCreate()
@@ -23,59 +27,26 @@ def load_covid_to_warehouse(**context):
     df = spark.read \
         .format("jdbc") \
         .option("url", "jdbc:postgresql://postgres:5432/airflow") \
-        .option("dbtable", "raw.covid_data") \
-        .option("user", "airflow") \
-        .option("password", "airflow") \
+        .option("dbtable", raw_table) \
+        .option("user", conn.login) \
+        .option("password", conn.password) \
         .option("driver", "org.postgresql.Driver") \
         .load()
 
-    df = df.dropDuplicates()
+    df = df.dropDuplicates(["date","country"])
 
     df.write \
         .format("jdbc") \
         .option("url", "jdbc:postgresql://postgres:5432/airflow") \
-        .option("dbtable", "warehouse.covid_data") \
-        .option("user", "airflow") \
-        .option("password", "airflow") \
+        .option("dbtable", dwh_table) \
+        .option("user", conn.login) \
+        .option("password", conn.password) \
         .option("driver", "org.postgresql.Driver") \
         .mode("overwrite") \
         .save()
 
     spark.stop()
 
-
-def load_countries_to_warehouse(**context):
-    """Read raw.countries_data via JDBC, deduplicate, and write to warehouse.countries_data."""
-    from pyspark.sql import SparkSession
-
-    spark = SparkSession.builder \
-        .appName("warehouse_countries") \
-        .config("spark.jars", "/home/airflow/jars/postgresql-42.6.0.jar") \
-        .config("spark.driver.extraClassPath", "/home/airflow/jars/postgresql-42.6.0.jar") \
-        .getOrCreate()
-
-    df = spark.read \
-        .format("jdbc") \
-        .option("url", "jdbc:postgresql://postgres:5432/airflow") \
-        .option("dbtable", "raw.countries_data") \
-        .option("user", "airflow") \
-        .option("password", "airflow") \
-        .option("driver", "org.postgresql.Driver") \
-        .load()
-
-    df = df.dropDuplicates()
-
-    df.write \
-        .format("jdbc") \
-        .option("url", "jdbc:postgresql://postgres:5432/airflow") \
-        .option("dbtable", "warehouse.countries_data") \
-        .option("user", "airflow") \
-        .option("password", "airflow") \
-        .option("driver", "org.postgresql.Driver") \
-        .mode("overwrite") \
-        .save()
-
-    spark.stop()
 
 
 with DAG(
@@ -91,7 +62,10 @@ with DAG(
         sql="""CREATE TABLE IF NOT EXISTS warehouse.covid_data (
             date DATE,
             country TEXT,
-            cases INT
+            cases INT,
+            deaths INT,
+            recovered INT,
+            active INT
         );""")
 
     t3 = PostgresOperator(
@@ -101,11 +75,29 @@ with DAG(
             country_name TEXT,
             country_code TEXT,
             population BIGINT,
-            region TEXT
+            region TEXT,
+            income_level TEXT
         );""")
 
-    t2 = PythonOperator(task_id="load_covid_to_warehouse",     python_callable=load_covid_to_warehouse)
-    t4 = PythonOperator(task_id="load_countries_to_warehouse", python_callable=load_countries_to_warehouse)
+    t2 = PythonOperator(
+        task_id="load_covid_to_warehouse",
+        python_callable=load_raw_data_to_warehouse,
+        op_kwargs = {
+            "app_name": "warehouse_covid",
+            "raw_table" : "raw.covid_data",
+            "dwh_table" : "warehouse.covid_data"
+        }
+                        )
+    t4 = PythonOperator(
+        task_id="load_countries_to_warehouse",
+        python_callable=load_raw_data_to_warehouse,
+        op_kwargs={
+            "app_name": "warehouse_countries",
+            "raw_table": "raw.countries_data",
+            "dwh_table": "warehouse.countries_data"
+        }
+        )
+
 
     t1 >> t2
     t3 >> t4

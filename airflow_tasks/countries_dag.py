@@ -7,10 +7,9 @@ import shutil
 from datetime import datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+from pyspark.sql import SparkSession, Row
 import requests
 import boto3
-
-
 
 def extract_countries(**context):
     """Fetch all countries from World Bank API and push raw list to XCom."""
@@ -23,7 +22,7 @@ def extract_countries(**context):
 
 def transform_countries(**context):
     """Pull raw countries from XCom, build Spark DataFrame, push as JSON strings."""
-    from pyspark.sql import SparkSession, Row
+
 
     data = context["ti"].xcom_pull(task_ids="extract_countries", key="countries_raw")
 

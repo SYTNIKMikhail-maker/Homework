@@ -5,18 +5,7 @@ Triggered on-demand via schedule=None.
 
 from datetime import datetime
 from airflow import DAG
-from airflow.operators.python import PythonOperator
-from airflow.providers.postgres.hooks.postgres import PostgresHook
-
-
-def cleanup_raw(**context):
-    """Truncate both raw schema tables to free space before next load."""
-    hook = PostgresHook(postgres_conn_id="postgre_conn")
-    sql = """
-        TRUNCATE TABLE raw.covid_data;
-        TRUNCATE TABLE raw.countries_data;
-    """
-    hook.run(sql)
+from airflow.providers.postgres.operators.postgres import PostgresOperator
 
 
 with DAG(
@@ -26,4 +15,11 @@ with DAG(
     catchup=False
 ) as dag:
 
-    t1 = PythonOperator(task_id="cleanup_raw", python_callable=cleanup_raw)
+    t1 = PostgresOperator(
+        task_id="cleanup_raw",
+        postgres_conn_id="postgre_conn",
+        sql = """
+        TRUNCATE TABLE raw.conid_data;
+        TRUNCATE TABLE raw.countries_data;
+        """
+    )
