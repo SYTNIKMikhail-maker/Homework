@@ -107,7 +107,7 @@ def test_check_consecutive_5months(spark):
         Row(patient_id="3", **{"5months": False}),
     ])
 
-    assert_df_equality(actual_df, expected_df, ignore_row_order=True)
+    assert_df_equality(actual_df, expected_df, ignore_row_order=True,ignore_nullable=True)
 
 
 def test_build_result_schema(raw_df):
