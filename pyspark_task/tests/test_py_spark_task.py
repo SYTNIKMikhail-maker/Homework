@@ -5,6 +5,8 @@ from datetime import datetime
 import pytest
 from pyspark.sql import SparkSession, Row
 import pyspark.sql.functions as F
+from dateutil.relativedelta import relativedelta
+from chispa.dataframe_comparer import assert_df_equality
 
 from pyspark_task.src.py_spark_task import (
     parse_dates,
@@ -97,7 +99,7 @@ def test_check_consecutive_5months(spark):
         Row(patient_id="3", **{"5months": False}),
     ])
 
-    assertDataFrameEquals(actual_df, expected_df)
+    assert_df_equality(actual_df, expected_df)
 
 
 def test_build_result_schema(raw_df):
