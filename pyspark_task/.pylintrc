@@ -1,0 +1,11 @@
+[MASTER]
+ignore=data
+
+[MESSAGES CONTROL]
+disable=C0114
+
+[FORMAT]
+max-line-length=100
+
+[DESIGN]
+max-args=7
