@@ -140,4 +140,3 @@ def test_build_result(enriched_df, spark):
     ], ["patient_id", "5months", "9months", "11months"])
 
     assertDataFrameEqual(actual_df, expected_df, checkRowOrder=False)
-
