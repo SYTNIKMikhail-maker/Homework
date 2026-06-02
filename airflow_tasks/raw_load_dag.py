@@ -22,11 +22,12 @@ def load_from_minio_to_raw(bucket: str,prefix: str,download_dir: str,app_name: s
         shutil.rmtree(download_dir)
     os.makedirs(download_dir)
 
+    conn_minio = BaseHook.get_connection("minio_conn")
     s3 = boto3.client(
         "s3",
-        endpoint_url="http://minio:9000",
-        aws_access_key_id="minioadmin",
-        aws_secret_access_key="minioadmin"
+        endpoint_url=f"http://{conn_minio.host}:{conn_minio.port}",
+        aws_access_key_id=conn_minio.login,
+        aws_secret_access_key=conn_minio.password
     )
 
     spark = SparkSession.builder \
@@ -42,7 +43,7 @@ def load_from_minio_to_raw(bucket: str,prefix: str,download_dir: str,app_name: s
         filename = key.split("/")[-1]
         s3.download_file(bucket, key, f"{download_dir}/{filename}")
 
-    df = spark.read.parquet(f"{download_dir}/*.parquet")
+    df = spark.read.parquet(download_dir)
 
 
 
@@ -91,7 +92,7 @@ with DAG(
         python_callable=load_from_minio_to_raw,
         op_kwargs = {
             "bucket": "covid-data",
-            "prefix": f"parquet/{datetime.now().strftime('%Y/%m/%d')}/",
+            "prefix": f"processed/{datetime.now().strftime('%Y/%m/%d')}/",
             "download_dir": "/tmp/covid_data",
             "app_name": "covid_raw_load",
             "target_table": "raw.covid_data"
@@ -102,7 +103,7 @@ with DAG(
         python_callable=load_from_minio_to_raw,
         op_kwargs={
             "bucket": "countries-data",
-            "prefix": f"parquet/{datetime.now().strftime('%Y/%m')}/",
+            "prefix": f"processed/{datetime.now().strftime('%Y/%m/%d')}/",
             "download_dir": "/tmp/countries_data",
             "app_name": "country_raw_load",
             "target_table": "raw.countries_data"

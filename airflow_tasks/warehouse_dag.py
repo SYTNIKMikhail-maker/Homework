@@ -33,7 +33,7 @@ def load_raw_data_to_warehouse(raw_table: str, dwh_table: str,app_name:str,**con
         .option("driver", "org.postgresql.Driver") \
         .load()
 
-    df = df.dropDuplicates(["date","country"])
+    df = df.dropDuplicates(["country_code","country_name"])
 
     df.write \
         .format("jdbc") \
@@ -64,7 +64,7 @@ with DAG(
             country TEXT,
             cases INT,
             deaths INT,
-            recovered INT,
+            recovered INT
         );""")
 
     t3 = PostgresOperator(
@@ -74,7 +74,7 @@ with DAG(
             country_name TEXT,
             country_code TEXT,
             population BIGINT,
-            region TEXT,
+            region TEXT
         );""")
 
     t2 = PythonOperator(
