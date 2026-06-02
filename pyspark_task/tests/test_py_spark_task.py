@@ -1,7 +1,7 @@
 """Unit tests for enroll module."""
 
 from datetime import datetime
-
+from pyspark.testing.utils import assertDataFrameEqual
 import pytest
 from pyspark.sql import SparkSession, Row
 import pyspark.sql.functions as F
