@@ -6,7 +6,7 @@ import pytest
 from pyspark.sql import SparkSession, Row
 import pyspark.sql.functions as F
 from dateutil.relativedelta import relativedelta
-from chispa.dataframe_comparer import assert_df_equality
+from pyspark.testing.utils import assertDataFrameEqual
 
 from pyspark_task.src.py_spark_task import (
     parse_dates,
@@ -53,6 +53,24 @@ def raw_df(spark):
     return spark.createDataFrame(data, ["patient_id", "effective_from_date"])
 
 
+@pytest.fixture
+def parsed_df(raw_df):
+    """Return DataFrame with visit_date column parsed from raw format."""
+    return parse_dates(raw_df)
+
+
+@pytest.fixture
+def filtered_df(parsed_df):
+    """Return DataFrame filtered to the last year before END_DATE."""
+    return filter_last_year(parsed_df, END_DATE)
+
+
+@pytest.fixture
+def enriched_df(filtered_df):
+    """Return DataFrame with year_month column added."""
+    return add_year_month(filtered_df)
+
+
 def test_parse_dates(raw_df):
     """Check that visit_date column is created and parsed correctly."""
     df = parse_dates(raw_df)
@@ -63,18 +81,18 @@ def test_parse_dates(raw_df):
     assert str(sample["visit_date"]) == "2016-09-01"
 
 
-def test_filter_last_year(raw_df):
-    """Verify no records exist before the one-year cutoff date."""
-    df = parse_dates(raw_df)
-    df_filtered = filter_last_year(df, END_DATE)
+def test_filter_last_year(parsed_df, spark):
+    """Verify only visits within one year before END_DATE are retained."""
+    actual_df = filter_last_year(parsed_df, END_DATE)
 
-    start = END_DATE - relativedelta(years=1)
+    start_date = END_DATE - relativedelta(years=1)
 
-    out_of_range = df_filtered.filter(
-        F.col("visit_date") < F.lit(start.date())
-    ).count()
+    expected_df = parsed_df.filter(
+        (F.col("visit_date") >= F.lit(start_date.date())) &
+        (F.col("visit_date") <= F.lit(END_DATE.date()))
+    )
 
-    assert out_of_range == 0
+    assertDataFrameEqual(actual_df, expected_df, checkRowOrder=False)
 
 
 def test_get_required_months():
@@ -107,38 +125,18 @@ def test_check_consecutive_5months(spark):
         Row(patient_id="3", **{"5months": False}),
     ])
 
-    assert_df_equality(actual_df, expected_df, ignore_row_order=True,ignore_nullable=True)
+    assertDataFrameEqual(actual_df, expected_df, checkRowOrder=False)
 
 
-def test_build_result_schema(raw_df):
-    """Confirm result has correct columns and all flags are boolean type."""
-    df = parse_dates(raw_df)
-    df = filter_last_year(df, END_DATE)
-    df = add_year_month(df)
+def test_build_result(enriched_df, spark):
+    """Verify build_result returns correct schema and consecutive enrollment flags per patient."""
+    actual_df = build_result(enriched_df, END_DATE, MONTHS_ARRAY)
 
-    result = build_result(df, END_DATE, MONTHS_ARRAY)
+    expected_df = spark.createDataFrame([
+        ("1", True, False, False),
+        ("2", False, False, False),
+        ("3", False, False, False),
+        ("4", False, False, False),
+    ], ["patient_id", "5months", "9months", "11months"])
 
-    assert set(result.columns) == {
-        "patient_id", "5months", "9months", "11months"
-    }
-
-    schema_map = {f.name: f.dataType.simpleString() for f in result.schema}
-
-    assert schema_map["5months"] == "boolean"
-    assert schema_map["9months"] == "boolean"
-    assert schema_map["11months"] == "boolean"
-
-
-def test_build_result_values(raw_df):
-    """Verify patient 1 visited 5 months in a row but not 9 or 11."""
-    df = parse_dates(raw_df)
-    df = filter_last_year(df, END_DATE)
-    df = add_year_month(df)
-
-    result = build_result(df, END_DATE, MONTHS_ARRAY)
-
-    rows = {r["patient_id"]: r for r in result.collect()}
-
-    assert rows["1"]["5months"] is True
-    assert rows["1"]["9months"] is False
-    assert rows["1"]["11months"] is False
+    assertDataFrameEqual(actual_df, expected_df, checkRowOrder=False)
